@@ -108,9 +108,25 @@ def build_features() -> None:
 
 
 @app.command("backtest")
-def backtest(model: str = typer.Option("baseline")) -> None:
-    """Walk-forward backtest for a model."""
-    _todo("5 - Baseline and backtest")
+def backtest(model: str = typer.Option("logistic_long", help="logistic_long | logistic_short")) -> None:
+    """Walk-forward train/evaluate, write out-of-sample signals, save the final model."""
+    import pandas as pd
+
+    from llmmoney.backtest.walkforward import SPECS, reliability, run
+    from llmmoney.storage.db import connect
+
+    if model not in SPECS:
+        typer.echo(f"Unknown model {model!r}; choose from {', '.join(SPECS)}")
+        raise typer.Exit(1)
+    with connect() as con:
+        report = run(con, model)
+        calib = reliability(con, model) if model == "logistic_long" else None
+    pd.set_option("display.width", 160)
+    typer.echo(report.round(4).to_string(index=False))
+    typer.echo("\nmean over years:\n" + report.drop(columns=["year", "C"]).mean().round(4).to_string())
+    if calib is not None:
+        typer.echo("\nreliability (out-of-sample, by predicted decile):\n" + calib.to_string())
+    typer.echo(f"\nSaved models_out/{model}.joblib; out-of-sample predictions in signals (model='{model}').")
 
 
 @app.command("serve")

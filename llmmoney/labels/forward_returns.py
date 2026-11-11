@@ -20,7 +20,7 @@ def build(prices: pd.DataFrame, market: pd.DataFrame, horizon: int = 5, flat_ban
         r = g["adj_close"].shift(-horizon) / g["adj_close"] - 1
         spy_r = end_date.map(spy).to_numpy() / g["date"].map(spy).to_numpy() - 1
         out.append(pd.DataFrame({"ticker": t, "date": g["date"], "fwd_ret": r,
-                                 "fwd_excess": r.to_numpy() - spy_r}))
+                                 "fwd_excess": r.to_numpy() - spy_r, "outcome_date": end_date}))
     df = pd.concat(out, ignore_index=True)
     x = df["fwd_excess"]
     df["y_fwd"] = np.where(x.isna(), np.nan, np.where(x > flat_band, UP, np.where(x < -flat_band, DOWN, FLAT)))

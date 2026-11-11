@@ -58,6 +58,9 @@ def build(prices: pd.DataFrame, up: float = 1.4, down: float = 0.7, horizon: int
         mid = ((g["a_high"] + g["a_low"]) / 2).to_numpy()
         starts = month_starts(g["date"]) if monthly else np.arange(len(g))
         y, days = label_series(mid, starts, up, down, horizon)
+        # date the outcome became known; training may only use rows known before the test period
+        end_idx = np.where(np.isnan(days), -1, starts + np.nan_to_num(days).astype(int))
+        outcome = [g["date"].iloc[min(k, len(g) - 1)] if k >= 0 else pd.NaT for k in end_idx]
         rows.append(pd.DataFrame({"ticker": t, "date": g["date"].iloc[starts].to_numpy(),
-                                  "y_barrier": y, "barrier_days": days}))
+                                  "y_barrier": y, "barrier_days": days, "outcome_date": outcome}))
     return pd.concat(rows, ignore_index=True)
