@@ -129,6 +129,26 @@ def backtest(model: str = typer.Option("logistic_long", help="logistic_long | lo
     typer.echo(f"\nSaved models_out/{model}.joblib; out-of-sample predictions in signals (model='{model}').")
 
 
+@app.command("backtest-dca")
+def backtest_dca(
+    top_n: int = typer.Option(5), tau: float = typer.Option(0.35), tranches: int = typer.Option(4),
+    spacing: int = typer.Option(5), a: float = typer.Option(1.0), b: float = typer.Option(1.0),
+) -> None:
+    """Compare lump-sum, plain DCA, signal+IV DCA and no-model DCA. Needs both logistic backtests run first."""
+    import pandas as pd
+
+    from llmmoney.backtest.dca import DCAConfig, run
+    from llmmoney.storage.db import connect
+
+    cfg = DCAConfig(top_n=top_n, tau=tau, tranches=tranches, spacing=spacing, a=a, b=b)
+    with connect() as con:
+        summary, nav, _ = run(con, cfg)
+    pd.set_option("display.width", 160)
+    typer.echo(f"{nav.index[0].date()} → {nav.index[-1].date()}  config={cfg}")
+    typer.echo(summary.round(4).to_string())
+    typer.echo("\ncost_vs_dca: average purchase price relative to plain DCA (negative = bought cheaper)")
+
+
 @app.command("serve")
 def serve() -> None:
     """Run the signals + chat API."""
