@@ -1,0 +1,37 @@
+# Starting universe: large, liquid US names. Benchmark (SPY) is configured in settings.
+tickers:
+  - AAPL
+  - MSFT
+  - NVDA
+  - AMZN
+  - GOOGL
+  - META
+  - TSLA
+  - BRK.B
+  - JPM
+  - V
+  - UNH
+  - XOM
+  - JNJ
+  - PG
+  - MA
+  - HD
+  - AVGO
+  - LLY
+  - COST
+  - MRK
+  - ABBV
+  - PEP
+  - KO
+  - ADBE
+  - CRM
+  - NFLX
+  - AMD
+  - INTC
+  - ORCL
+  - CSCO
+  - BAC
+  - WMT
+  - DIS
+  - TMO
+  - MCD

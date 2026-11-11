@@ -1,0 +1,13 @@
+# Curated investor voices on X. Handles are placeholders to review/edit.
+# weight: prior trust in the account (1.0 = neutral). Later fitted from historical hit rate.
+voices:
+  - {handle: elerianm, weight: 1.0, note: "macro"}
+  - {handle: LizAnnSonders, weight: 1.0, note: "macro / market strategy"}
+  - {handle: charliebilello, weight: 1.0, note: "market data"}
+  - {handle: michaelbatnick, weight: 1.0, note: "markets"}
+  - {handle: Ritholtz, weight: 1.0, note: "markets"}
+  - {handle: unusual_whales, weight: 1.0, note: "flow / news"}
+  - {handle: DeItaone, weight: 1.0, note: "headlines"}
+  - {handle: Carl_C_Icahn, weight: 1.0, note: "activist"}
+  - {handle: BillAckman, weight: 1.0, note: "activist"}
+  - {handle: CathieDWood, weight: 1.0, note: "growth"}

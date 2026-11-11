@@ -1,0 +1,31 @@
+[project]
+name = "llmmoney"
+version = "0.1.0"
+description = "Market signals and research assistant from SimFin fundamentals plus investor tweet/news sentiment"
+requires-python = ">=3.11"
+dependencies = [
+  "duckdb>=1.0",
+  "pandas>=2.2",
+  "pyarrow>=15",
+  "pydantic>=2.6",
+  "pydantic-settings>=2.2",
+  "pyyaml>=6",
+  "typer>=0.12",
+]
+
+[project.optional-dependencies]
+ingest = ["simfin>=1.0", "openai>=1.40", "apscheduler>=3.10", "tenacity>=8.2"]
+ml = ["lightgbm>=4.3", "scikit-learn>=1.4"]
+llm = ["torch", "transformers>=4.44", "peft>=0.12", "trl>=0.10", "bitsandbytes", "datasets"]
+api = ["fastapi>=0.111", "uvicorn>=0.30"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+llmmoney = "llmmoney.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

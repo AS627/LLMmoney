@@ -1,0 +1,9 @@
+.idea/
+.env
+.venv/
+data/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+models_out/
