@@ -90,8 +90,21 @@ def run_grokbot(once: bool = typer.Option(False, help="Single poll then exit")) 
 
 @app.command("build-features")
 def build_features() -> None:
-    """Build point-in-time daily snapshots and labels."""
-    _todo("4 - Features and labels")
+    """Build point-in-time daily features and both label tables."""
+    from llmmoney.features.build_snapshots import run
+    from llmmoney.storage.db import connect
+
+    with connect() as con:
+        counts = run(con)
+        stats = con.execute("""
+            SELECT round(avg(y_barrier), 3), count(y_barrier) FROM labels_barrier
+        """).fetchone()
+        fwd = con.execute("""
+            SELECT y_fwd, count(*) FROM labels_fwd WHERE y_fwd IS NOT NULL GROUP BY 1 ORDER BY 1
+        """).fetchall()
+    typer.echo(f"{counts}")
+    typer.echo(f"barrier label: positive rate {stats[0]} over {stats[1]} known monthly entries")
+    typer.echo("5d label counts (0=down,1=flat,2=up): " + ", ".join(f"{int(k)}={n}" for k, n in fwd))
 
 
 @app.command("backtest")
