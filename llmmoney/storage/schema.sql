@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS fundamentals (
     fiscal_period  VARCHAR NOT NULL,      -- Q1..Q4
     report_date    DATE,                  -- fiscal period end
     publish_date   DATE    NOT NULL,      -- when it became public: USE THIS FOR JOINS
+    restated_date  DATE,                  -- SimFin values may reflect a later restatement
     item           VARCHAR NOT NULL,
     value          DOUBLE,
     PRIMARY KEY (ticker, statement, fiscal_year, fiscal_period, item)

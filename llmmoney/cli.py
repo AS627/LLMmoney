@@ -24,7 +24,23 @@ def _todo(milestone: str) -> None:
 @app.command("ingest-simfin")
 def ingest_simfin(tickers: str = typer.Option("", help="Comma-separated subset; default = universe")) -> None:
     """Bulk-load SimFin fundamentals and daily prices."""
-    _todo("2 - SimFin ingest")
+    import logging
+
+    from llmmoney.config.settings import load_universe
+    from llmmoney.ingest.simfin_loader import ingest
+    from llmmoney.storage.db import connect
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    selected = [t.strip().upper() for t in tickers.split(",") if t.strip()] or load_universe()
+    with connect() as con:
+        counts = ingest(con, selected)
+        summary = con.execute("""
+            SELECT ticker, min(date), max(date), count(*) FROM prices
+            WHERE ticker IN (SELECT UNNEST(?)) GROUP BY ticker ORDER BY ticker
+        """, [selected]).fetchall()
+    typer.echo(f"Loaded {counts}")
+    for t, lo, hi, n in summary:
+        typer.echo(f"  {t:6s} prices {lo} → {hi} ({n} rows)")
 
 
 @app.command("run-grokbot")
