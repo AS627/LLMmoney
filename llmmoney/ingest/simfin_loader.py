@@ -29,6 +29,11 @@ STATEMENTS = {
 ID_COLS = ["Ticker", "SimFinId", "Currency", "Fiscal Year", "Fiscal Period",
            "Report Date", "Publish Date", "Restated Date"]
 
+# Our ticker -> SimFin's ticker, for share classes SimFin lists differently. Data is stored
+# under our ticker. BRK-A prices differ in level from BRK.B but returns and per-share
+# ratios are consistent, which is all the features use.
+SIMFIN_ALIASES = {"BRK.B": "BRK-A", "GOOGL": "GOOG"}
+
 PRICE_COLS = {
     "Ticker": "ticker", "Date": "date", "Open": "open", "High": "high", "Low": "low",
     "Close": "close", "Adj. Close": "adj_close", "Volume": "volume",
@@ -105,7 +110,13 @@ def ingest(con: duckdb.DuckDBPyConnection, tickers: Iterable[str], refresh_days:
     """Download (or reuse cached) SimFin bulk data and write the given tickers to DuckDB."""
     sf = _setup_simfin()
     tickers = sorted(set(tickers))
+    to_ours = {SIMFIN_ALIASES.get(t, t): t for t in tickers}
     counts: dict[str, int] = {}
+
+    def select(df: pd.DataFrame) -> pd.DataFrame:
+        df = df[df["Ticker"].isin(to_ours)].copy()
+        df["Ticker"] = df["Ticker"].map(to_ours)
+        return df
 
     frames = []
     for statement, datasets in STATEMENTS.items():
@@ -113,14 +124,14 @@ def ingest(con: duckdb.DuckDBPyConnection, tickers: Iterable[str], refresh_days:
             df = _load_dataset(sf, ds, refresh_days)
             if df is None:
                 continue
-            df = df[df["Ticker"].isin(tickers)]
+            df = select(df)
             if not df.empty:
                 frames.append(fundamentals_long(df, statement))
     fund = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
     counts["fundamentals"] = _upsert(con, "fundamentals", fund, tickers) if not fund.empty else 0
 
     px = sf.load_shareprices(variant="daily", market="us", index=None, refresh_days=refresh_days)
-    px = prices_frame(px[px["Ticker"].isin(tickers)])
+    px = prices_frame(select(px))
     counts["prices"] = _upsert(con, "prices", px, tickers)
 
     found = set(px["ticker"]) | (set(fund["ticker"]) if not fund.empty else set())

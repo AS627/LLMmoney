@@ -43,6 +43,45 @@ def ingest_simfin(tickers: str = typer.Option("", help="Comma-separated subset; 
         typer.echo(f"  {t:6s} prices {lo} → {hi} ({n} rows)")
 
 
+@app.command("ingest-market")
+def ingest_market(start: str = typer.Option("1990-01-01", help="History start date")) -> None:
+    """Load ^VIX, SPY and ^IRX daily history from yfinance."""
+    import logging
+
+    from llmmoney.ingest.yf_loader import ingest
+    from llmmoney.storage.db import connect
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    with connect() as con:
+        counts = ingest(con, start=start)
+    typer.echo(f"Loaded {counts}")
+
+
+@app.command("record-options")
+def record_options(tickers: str = typer.Option("", help="Comma-separated subset; default = universe")) -> None:
+    """Snapshot today's option chains and store IV features. Run daily after the close."""
+    import logging
+
+    from llmmoney.config.settings import load_universe
+    from llmmoney.ingest.options_recorder import record
+    from llmmoney.storage.db import connect
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    selected = [t.strip().upper() for t in tickers.split(",") if t.strip()] or load_universe()
+    with connect() as con:
+        counts = record(con, selected)
+        rows = con.execute("""
+            SELECT ticker, date, round(spot, 2), round(iv30_atm, 4), round(iv60_atm, 4),
+                   round(skew30, 4), round(pc_oi_ratio, 2), n_contracts
+            FROM iv_snapshots WHERE date = (SELECT max(date) FROM iv_snapshots)
+              AND ticker IN (SELECT UNNEST(?)) ORDER BY ticker
+        """, [selected]).fetchall()
+    typer.echo(f"{counts}")
+    typer.echo("ticker  date        spot     iv30    iv60    skew30  pc_oi  n")
+    for r in rows:
+        typer.echo("  ".join(str(x) for x in r))
+
+
 @app.command("run-grokbot")
 def run_grokbot(once: bool = typer.Option(False, help="Single poll then exit")) -> None:
     """Poll investor voices and news via the Grok API."""

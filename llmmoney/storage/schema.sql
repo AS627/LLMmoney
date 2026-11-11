@@ -54,6 +54,36 @@ CREATE TABLE IF NOT EXISTS news (
     raw           JSON
 );
 
+-- Market-wide daily series from yfinance: ^VIX (market IV), SPY (benchmark), ^IRX (13w T-bill %).
+CREATE TABLE IF NOT EXISTS market_series (
+    symbol     VARCHAR NOT NULL,
+    date       DATE    NOT NULL,
+    open       DOUBLE,
+    high       DOUBLE,
+    low        DOUBLE,
+    close      DOUBLE,
+    adj_close  DOUBLE,
+    volume     BIGINT,
+    PRIMARY KEY (symbol, date)
+);
+
+-- Per-stock implied-volatility summary, one row per ticker per recording day.
+-- yfinance has no option history, so this table only grows from the day recording starts.
+CREATE TABLE IF NOT EXISTS iv_snapshots (
+    ticker        VARCHAR NOT NULL,
+    date          DATE    NOT NULL,        -- trading day the snapshot describes
+    asof_ts       TIMESTAMP NOT NULL,      -- when it was recorded
+    spot          DOUBLE,
+    iv30_atm      DOUBLE,
+    iv60_atm      DOUBLE,
+    skew30        DOUBLE,                  -- IV(put, K=0.9S) - IV(call, K=1.1S) at ~30d
+    term_slope    DOUBLE,                  -- iv60_atm - iv30_atm
+    pc_vol_ratio  DOUBLE,                  -- put/call volume, expiries <= ~60d
+    pc_oi_ratio   DOUBLE,                  -- put/call open interest, expiries <= ~60d
+    n_contracts   INTEGER,
+    PRIMARY KEY (ticker, date)
+);
+
 CREATE TABLE IF NOT EXISTS signals (
     ticker      VARCHAR NOT NULL,
     date        DATE    NOT NULL,

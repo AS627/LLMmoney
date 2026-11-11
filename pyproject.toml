@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ingest = ["simfin>=1.0", "openai>=1.40", "apscheduler>=3.10", "tenacity>=8.2"]
+ingest = ["simfin>=1.0", "yfinance>=0.2.40", "openai>=1.40", "apscheduler>=3.10", "tenacity>=8.2"]
 ml = ["lightgbm>=4.3", "scikit-learn>=1.4"]
 llm = ["torch", "transformers>=4.44", "peft>=0.12", "trl>=0.10", "bitsandbytes", "datasets"]
 api = ["fastapi>=0.111", "uvicorn>=0.30"]
